@@ -1,0 +1,13 @@
+.idea
+.DS_Store
+
+.env
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+*.tfvars.json
+
