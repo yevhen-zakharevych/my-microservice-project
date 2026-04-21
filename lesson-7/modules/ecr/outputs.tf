@@ -1,9 +1,14 @@
 output "repository_url" {
-  description = "URL of the created ECR repository"
-  value       = aws_ecr_repository.this.repository_url
+  description = "ECR repository URL"
+  value       = aws_ecr_repository.main.repository_url
 }
 
-output "scan_on_push" {
-  description = "Whether image scanning on push is enabled for the ECR repository"
-  value       = var.scan_on_push
+output "repository_arn" {
+  description = "ECR repository ARN"
+  value       = aws_ecr_repository.main.arn
+}
+
+output "registry_id" {
+  description = "ECR registry ID"
+  value       = aws_ecr_repository.main.registry_id
 }

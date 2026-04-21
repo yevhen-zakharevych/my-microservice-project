@@ -15,13 +15,18 @@ module "vpc" {
   public_subnets     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"] # Публічні підмережі
   private_subnets    = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"] # Приватні підмережі
   availability_zones = ["eu-west-3a", "eu-west-3b", "eu-west-3c"]    # Зони доступності
-  vpc_name           = "vpc"                                         # Ім'я VPC
+  vpc_name           = "lesson-7-vpc"                                # Ім'я VPC
 }
 
 # Підключаємо модуль ECR
 module "ecr" {
   source       = "./modules/ecr"
-  ecr_name     = "lesson-5-ecr"
-  scan_on_push = true
+  ecr_name     = "lesson-7-django-app"
+}
+
+# Підключаємо кластер EKS
+module "eks" {
+  source          = "./modules/eks"
+  subnet_ids      = module.vpc.private_subnets
 }
 

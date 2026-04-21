@@ -32,9 +32,12 @@ output "ecr_repository_url" {
   description = "URL ECR репозиторію"
   value       = module.ecr.repository_url
 }
-
-output "ecr_scan_on_push" {
-  description = "Чи сканується ECR репозиторій при пуші"
-  value       = module.ecr.scan_on_push
+output "eks_cluster_name" {
+  description = "EKS cluster name"
+  value       = module.eks.cluster_name
 }
 
+output "eks_cluster_endpoint" {
+  description = "EKS cluster endpoint"
+  value       = module.eks.cluster_endpoint
+}
