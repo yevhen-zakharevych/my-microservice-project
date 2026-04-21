@@ -1,0 +1,29 @@
+replicaCount: 2
+
+image:
+  repository: 878752032411.dkr.ecr.eu-west-3.amazonaws.com/lesson-7-django-app
+  pullPolicy: Always
+  tag: "v4"
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 8000
+
+configData:
+  DEBUG: "False"
+  ALLOWED_HOSTS: "*"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi

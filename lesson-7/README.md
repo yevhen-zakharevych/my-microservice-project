@@ -1,47 +1,69 @@
-# Lesson: Terraform Infrastructure for Microservice Project
-
 ## Project Structure
 
-This Terraform project sets up the infrastructure for a microservice application on AWS. The structure is organized as follows:
+The project is divided into Terraform infrastructure provisioning and Kubernetes deployment charts:
 
 - `backend.tf`: Configures the Terraform backend for state management.
-- `main.tf`: Main configuration file that instantiates the modules.
-- `outputs.tf`: Defines the outputs of the Terraform configuration.
+- `main.tf`: Main configuration file that instantiates all modules.
+- `outputs.tf`: Defines the outputs of the Terraform configuration (e.g., ECR URL, EKS cluster name).
 - `modules/`: Directory containing reusable Terraform modules.
-  - `ecr/`: Module for Amazon Elastic Container Registry (ECR).
-    - `erc.tf`: ECR repository configuration.
-    - `outputs.tf`: Outputs for the ECR module.
-    - `variables.tf`: Variables for the ECR module.
-  - `s3-backend/`: Module for S3 backend and DynamoDB for state locking.
-    - `dynamodb.tf`: DynamoDB table for state locking.
-    - `outputs.tf`: Outputs for the S3 backend module.
-    - `s3.tf`: S3 bucket configuration for state storage.
-    - `variables.tf`: Variables for the S3 backend module.
-  - `vpc/`: Module for Virtual Private Cloud (VPC) setup.
-    - `outputs.tf`: Outputs for the VPC module.
-    - `routes.tf`: Route table configurations.
-    - `variables.tf`: Variables for the VPC module.
-    - `vpc.tf`: VPC, subnets, and security groups configuration.
+  - `s3-backend/`: S3 bucket and DynamoDB for remote state locking.
+  - `vpc/`: Virtual Private Cloud (VPC), subnets, route tables, and security groups.
+  - `ecr/`: Amazon Elastic Container Registry (ECR) for storing Docker images.
+  - `eks/`: Amazon Elastic Kubernetes Service (EKS) cluster and managed node groups.
+- `charts/`: Directory containing Helm charts for application deployment.
+  - `django-app/`: Helm chart for the Django application (includes Deployment, Service, ConfigMap, and HPA).
 
-## Commands for Initialization and Launch
+## 🚀 Deployment Guide
 
-To manage the infrastructure, use the following Terraform commands:
+### Step 1: Infrastructure Provisioning (Terraform)
 
-- `terraform init`: Initialize the Terraform working directory.
-- `terraform plan`: Generate and show an execution plan.
-- `terraform apply`: Apply the changes required to reach the desired state.
-- `terraform destroy`: Destroy the Terraform-managed infrastructure.
+Initialize and apply the Terraform configurations to create the AWS resources:
 
-## Modules
+```bash
+terraform init
+terraform plan
+terraform apply
+```
 
-### s3-backend
+### Step 2: Configure Kubernetes Access
 
-This module sets up an S3 bucket for storing Terraform state files remotely and a DynamoDB table for state locking to prevent concurrent modifications. This ensures safe and collaborative infrastructure management.
+Update your local kubeconfig to interact with the new EKS cluster:
 
-### vpc
+```bash
+aws eks update-kubeconfig --region <your-region> --name <your-cluster-name>
+```
 
-This module creates a Virtual Private Cloud (VPC) with subnets, route tables, and security groups. It provides the network foundation for deploying resources in AWS, including public and private subnets for better security and organization.
+### Step 3: Build and Push Docker Image
 
-### ecr
+Build the Docker image for the required architecture (e.g., linux/amd64) and push it to the newly created ECR repository:
 
-This module configures Amazon Elastic Container Registry (ECR) repositories for storing Docker images. It enables secure and scalable container image management, which is essential for microservice deployments.
+```bash
+aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <your-ecr-url>
+docker build --platform linux/amd64 -t django-app:latest .
+docker tag django-app:latest <your-ecr-url>/django-app:v1
+docker push <your-ecr-url>/django-app:v1
+```
+
+### Step 4: Deploy the Application (Helm)
+
+Update the image.repository and image.tag in charts/django-app/values.yaml, then deploy the release:
+
+```bash
+helm upgrade --install django-release ./charts/django-app
+```
+
+Check the status of your pods and get the LoadBalancer URL to access the application:
+
+```bash
+kubectl get pods
+kubectl get svc django-release-django-app
+```
+
+## Cleanup
+To avoid incurring future AWS charges, destroy all created resources.
+Important: You must uninstall the Helm release before destroying the Terraform infrastructure to ensure cloud LoadBalancers are properly removed.
+
+```bash
+helm uninstall django-release
+terraform destroy
+```
