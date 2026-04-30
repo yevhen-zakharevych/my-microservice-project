@@ -3,7 +3,7 @@ replicaCount: 2
 image:
   repository: 878752032411.dkr.ecr.eu-west-3.amazonaws.com/lesson-7-django-app
   pullPolicy: Always
-  tag: "v4"
+  tag: "v2"
 
 service:
   type: LoadBalancer

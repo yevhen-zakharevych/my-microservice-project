@@ -41,3 +41,13 @@ output "eks_cluster_endpoint" {
   description = "EKS cluster endpoint"
   value       = module.eks.cluster_endpoint
 }
+
+output "jenkins_release" {
+  description = "Jenkins Helm release name"
+  value = module.jenkins.jenkins_release_name
+}
+
+output "jenkins_namespace" {
+  description = "Jenkins namespace"
+  value = module.jenkins.jenkins_namespace
+}
