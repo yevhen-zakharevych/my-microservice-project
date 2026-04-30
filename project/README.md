@@ -10,6 +10,8 @@ The project is divided into Terraform infrastructure provisioning and Kubernetes
   - `vpc/`: Virtual Private Cloud (VPC), subnets, route tables, and security groups.
   - `ecr/`: Amazon Elastic Container Registry (ECR) for storing Docker images.
   - `eks/`: Amazon Elastic Kubernetes Service (EKS) cluster and managed node groups.
+  - `jenkins/`: Jenkins deployment on EKS using Helm.
+  - `argocd/`: Argo CD deployment on EKS using Helm.
 - `charts/`: Directory containing Helm charts for application deployment.
   - `django-app/`: Helm chart for the Django application (includes Deployment, Service, ConfigMap, and HPA).
 
@@ -58,6 +60,46 @@ Check the status of your pods and get the LoadBalancer URL to access the applica
 kubectl get pods
 kubectl get svc django-release-django-app
 ```
+
+## 🤖 Automated CI/CD & GitOps Guide
+
+This project features a fully automated CI/CD pipeline using Jenkins and Argo CD.
+
+### 🔍 How to Verify Jenkins Jobs
+
+1.  **Access Jenkins:**
+    *   Retrieve the LoadBalancer URL:
+        ```bash
+        kubectl get svc -n jenkins jenkins -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+        ```
+    *   **Login:** `admin` / **Password:** `admin123` (as configured in JCasC).
+2.  **Seed Job:**
+    *   Upon your first login, locate and run the `seed-job`.
+    *   This job will automatically generate the main pipeline: `goit-django-docker`.
+3.  **Monitor the Pipeline:**
+    *   Open the `goit-django-docker` job and select the latest build.
+    *   Click on **Console Output** to see the real-time logs.
+    *   **Verification:** You will see **Kaniko** building the Docker image, pushing it to **Amazon ECR**, and finally a **git push** confirmation indicating that the `values.yaml` in your Git repository has been updated with the new image tag.
+
+### 🐙 How to Monitor Results in Argo CD
+
+1.  **Access Argo CD:**
+    *   Retrieve the LoadBalancer URL:
+        ```bash
+        kubectl get svc -n argocd argo-cd-argocd-server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+        ```
+    *   **Login:** `admin`
+    *   **Get Initial Password:**
+        ```bash
+        kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+        ```
+2.  **Application Dashboard:**
+    *   In the Argo CD UI, you will see the `django-app` application.
+    *   Click on the application card to see the live resource tree (Deployment, Pods, Services, HPA).
+3.  **GitOps Synchronization:**
+    *   Argo CD monitors your Git repository for changes.
+    *   As soon as Jenkins pushes the updated `values.yaml`, Argo CD will detect that the cluster is **Out of Sync**.
+    *   Depending on the sync policy, it will automatically pull the new configuration and update your application in the EKS cluster. You can watch the Pods being cycled to the new image version in real-time.
 
 ## Cleanup
 To avoid incurring future AWS charges, destroy all created resources.

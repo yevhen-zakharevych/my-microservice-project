@@ -1,0 +1,12 @@
+server:
+  service:
+    type: LoadBalancer
+    port: 443
+
+configs:
+  repositories:
+    infra-repo:
+      url: https://github.com/your-username/infra.git
+      type: git
+      password: your-github-token
+      username: your-github-username
