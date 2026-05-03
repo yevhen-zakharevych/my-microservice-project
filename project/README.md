@@ -15,6 +15,90 @@ The project is divided into Terraform infrastructure provisioning and Kubernetes
 - `charts/`: Directory containing Helm charts for application deployment.
   - `django-app/`: Helm chart for the Django application (includes Deployment, Service, ConfigMap, and HPA).
 
+## 🗄️ RDS Module
+
+This module provides a flexible way to deploy either a standard AWS RDS instance or an Amazon Aurora cluster.
+
+### Usage Example
+
+```hcl
+module "rds" {
+  source = "./modules/rds"
+
+  name       = "myapp-db"
+  use_aurora = false # Set to true for Aurora
+
+  # Standard RDS Settings
+  engine                     = "postgres"
+  engine_version             = "17.2"
+  parameter_group_family_rds = "postgres17"
+
+  # Aurora Settings (used if use_aurora = true)
+  engine_cluster                = "aurora-postgresql"
+  engine_version_cluster        = "15.3"
+  parameter_group_family_aurora = "aurora-postgresql15"
+  aurora_replica_count          = 1
+
+  # Common Configuration
+  instance_class          = "db.t3.micro"
+  allocated_storage       = 20
+  db_name                 = "myapp"
+  username                = "postgres"
+  password                = "admin123AWS23"
+  vpc_id                  = module.vpc.vpc_id
+  subnet_private_ids      = module.vpc.private_subnets
+  subnet_public_ids       = module.vpc.public_subnets
+  publicly_accessible     = true
+  multi_az                = false
+  backup_retention_period = 1
+
+  parameters = {
+    max_connections = "200"
+  }
+
+  tags = {
+    Environment = "dev"
+    Project     = "myapp"
+  }
+}
+```
+
+### Input Variables
+
+| Name | Description | Type |
+| :--- | :--- | :--- |
+| `name` | The name prefix for RDS resources. | `string` |
+| `use_aurora` | Toggle between Standard RDS (`false`) and Aurora Cluster (`true`). | `bool` |
+| `engine` | Database engine for Standard RDS (e.g., `postgres`, `mysql`). | `string` |
+| `engine_version` | Engine version for Standard RDS. | `string` |
+| `engine_cluster` | Engine for Aurora (e.g., `aurora-postgresql`, `aurora-mysql`). | `string` |
+| `engine_version_cluster` | Engine version for Aurora. | `string` |
+| `instance_class` | The compute and memory capacity of the DB instance. | `string` |
+| `allocated_storage` | Storage capacity in GB (only for Standard RDS). | `number` |
+| `db_name` | Name of the database to create on startup. | `string` |
+| `username` | Master username for the database. | `string` |
+| `password` | Master password for the database. | `string` |
+| `vpc_id` | ID of the VPC where the DB will be deployed. | `string` |
+| `subnet_private_ids` | Private subnets for the DB subnet group. | `list(string)` |
+| `subnet_public_ids` | Public subnets for the DB subnet group. | `list(string)` |
+| `publicly_accessible` | Whether the DB is accessible from outside the VPC. | `bool` |
+| `multi_az` | Whether to create a standby instance in a different AZ. | `bool` |
+| `backup_retention_period` | Number of days to retain automated backups. | `number` |
+| `parameters` | Map of custom DB parameters. | `map(string)` |
+
+### Configuration Guide
+
+#### Switching between Standard RDS and Aurora
+- Use the `use_aurora` variable. 
+- **Note:** Standard RDS supports `db.t3.micro` (Free Tier), while Aurora typically requires `db.t3.medium` or higher.
+
+#### Changing the DB Engine
+- For Standard RDS: Update `engine`, `engine_version`, and `parameter_group_family_rds`.
+- For Aurora: Update `engine_cluster`, `engine_version_cluster`, and `parameter_group_family_aurora`.
+
+#### Scaling Instance Class
+- Modify the `instance_class` variable. For example, change from `db.t3.micro` to `db.t3.medium` for better performance.
+
 ## 🚀 Deployment Guide
 
 ### Step 1: Infrastructure Provisioning (Terraform)
