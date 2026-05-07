@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  repository: 878752032411.dkr.ecr.eu-west-3.amazonaws.com/lesson-7-django-app
+  repository: 878752032411.dkr.ecr.eu-west-3.amazonaws.com/final-project-django-app
   pullPolicy: Always
   tag: "v2"
 

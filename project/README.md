@@ -11,7 +11,10 @@ The project is divided into Terraform infrastructure provisioning and Kubernetes
   - `ecr/`: Amazon Elastic Container Registry (ECR) for storing Docker images.
   - `eks/`: Amazon Elastic Kubernetes Service (EKS) cluster and managed node groups.
   - `jenkins/`: Jenkins deployment on EKS using Helm.
-  - `argocd/`: Argo CD deployment on EKS using Helm.
+  - `argo_cd/`: Argo CD deployment on EKS using Helm.
+  - `rds/`: Relational Database Service (RDS) and Aurora cluster management.
+  - `monitoring/`: Prometheus and Grafana stack for observability.
+- `django/`: The Django application source code, Dockerfile, and Jenkinsfile.
 - `charts/`: Directory containing Helm charts for application deployment.
   - `django-app/`: Helm chart for the Django application (includes Deployment, Service, ConfigMap, and HPA).
 
@@ -184,6 +187,35 @@ This project features a fully automated CI/CD pipeline using Jenkins and Argo CD
     *   Argo CD monitors your Git repository for changes.
     *   As soon as Jenkins pushes the updated `values.yaml`, Argo CD will detect that the cluster is **Out of Sync**.
     *   Depending on the sync policy, it will automatically pull the new configuration and update your application in the EKS cluster. You can watch the Pods being cycled to the new image version in real-time.
+
+## 📊 Monitoring & Observability
+
+The infrastructure includes a comprehensive monitoring stack based on **Prometheus** and **Grafana** (deployed via the `kube-prometheus-stack`).
+
+### 🔍 How to Access Grafana
+
+1.  **Get the Service Name:**
+    ```bash
+    kubectl get svc -n monitoring
+    ```
+2.  **Port Forward to Local Machine:**
+    ```bash
+    kubectl port-forward svc/kube-prometheus-stack-grafana 3000:80 -n monitoring
+    ```
+
+### 📈 What's Included?
+- **Prometheus:** Collects metrics from your Django application, EKS nodes, and Kubernetes system components.
+- **Grafana:** Pre-configured with dashboards for:
+    - Kubernetes Cluster Health
+    - Node Exporter (CPU, Memory, Disk, Network)
+    - Pod-level resource usage
+- **Alertmanager:** Configured to handle alerts based on Prometheus metrics.
+
+### 💡 Troubleshooting Resource Issues
+The monitoring stack requires significant resources. If pods are stuck in `Pending`:
+1.  **Check Pod Status:** `kubectl get pods -n monitoring`
+2.  **Check for Errors:** `kubectl describe pod <pod-name> -n monitoring`
+3.  **Scale Up:** If you see "Insufficient memory" or "Too many pods", ensure your EKS Node Group uses at least `t3.medium` instances and has an appropriate `desired_size`.
 
 ## Cleanup
 To avoid incurring future AWS charges, destroy all created resources.

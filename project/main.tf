@@ -43,7 +43,7 @@ provider "helm" {
 
 module "s3_backend" {
   source      = "./modules/s3-backend"
-  bucket_name = "terraform-state-bucket-lesson-8-9-01001"
+  bucket_name = "terraform-state-bucket-final-project-01001"
   table_name  = "terraform-locks"
 }
 
@@ -53,12 +53,12 @@ module "vpc" {
   public_subnets     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
   private_subnets    = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
   availability_zones = ["eu-west-3a", "eu-west-3b", "eu-west-3c"]
-  vpc_name           = "lesson-7-vpc"
+  vpc_name           = "final-project-vpc"
 }
 
 module "ecr" {
   source   = "./modules/ecr"
-  ecr_name = "lesson-7-django-app"
+  ecr_name = "final-project-django-app"
 }
 
 module "eks" {
@@ -118,5 +118,15 @@ module "rds" {
     Environment = "dev"
     Project     = "myapp"
   }
+}
+
+module "monitoring" {
+  source                 = "./modules/monitoring"
+  cluster_name           = module.eks.cluster_name
+  cluster_endpoint       = module.eks.cluster_endpoint
+  cluster_ca_certificate = module.eks.cluster_certificate_authority_data
+  grafana_admin_password = "admin123AWS23"
+
+  depends_on = [module.eks]
 }
 
